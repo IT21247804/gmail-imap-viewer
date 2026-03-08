@@ -1,15 +1,16 @@
 const express = require('express');
 const mysql = require('mysql2');
+require('dotenv').config();
 
 const app = express();
 const port = 3000;
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '', // Default XAMPP password is empty
-  database: 'gmail' // Change this to your database name
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD, 
+  database: process.env.DB_NAME 
 });
 
 db.connect((err) => {
@@ -17,7 +18,25 @@ db.connect((err) => {
     console.error('Error connecting to MySQL:', err);
     return;
   }
-  console.log('Connected to MySQL gmail database');
+  console.log('Connected to MySQL server');
+
+  // Create database if it doesn't exist
+  db.query('CREATE DATABASE IF NOT EXISTS gmail', (err) => {
+    if (err) {
+      console.error('Error creating database:', err);
+      return;
+    }
+    console.log('Database gmail created or already exists');
+
+    // Switch to the database
+    db.changeUser({database: 'gmail'}, (err) => {
+      if (err) {
+        console.error('Error switching to database:', err);
+        return;
+      }
+      console.log('Switched to gmail database');
+    });
+  });
 });
 
 app.get('/', (req, res) => {
